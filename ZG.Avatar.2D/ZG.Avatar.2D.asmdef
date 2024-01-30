@@ -1,0 +1,18 @@
+{
+    "name": "ZG.Avatar.2D",
+    "rootNamespace": "",
+    "references": [
+        "GUID:beff58cf91ef5dc4f8939ec84aca2109",
+        "GUID:a11ca0932c609c24ca9887c3504c4ddb",
+        "GUID:41524c21c95e5fe4dbc5b48bd21995a4"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

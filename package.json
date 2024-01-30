@@ -1,0 +1,15 @@
+{
+  "name": "cn.com.zerogame.unitypackages.avatar",
+  "displayName": "ZGUP Avatar",
+  "version": "2.2.41",
+  "unity": "2022.2",
+  "unityRelease": "0f1",
+  "dependencies": {
+    "cn.com.zerogame.unitypackages": "2.2.1"
+  },
+  "description": "Zero Game Unity Package Avatar",
+  "keywords": [
+    "zg",
+    "avatar"
+  ]
+}

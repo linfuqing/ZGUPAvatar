@@ -252,10 +252,12 @@ namespace ZG.Avatar
 
                                     path = fileName + ".prefab";
 
+                                    if (filePaths == null)
+                                        filePaths = new Dictionary<string, string>();
+                                    
                                     filePaths[path] = assetPath;
 
                                     temp = PrefabUtility.SaveAsPrefabAsset(gameObject, path, out bool isSuccess);
-
                                     if (isSuccess)
                                     {
                                         if (temp == null)
@@ -407,15 +409,18 @@ namespace ZG.Avatar
                 filePaths = new Dictionary<string, string>();
 
             var filePath = $"{fileName}.asset";
-
-            if (filePaths.TryGetValue(filePath, out var path))
+            if (!filePaths.ContainsKey(filePath))
             {
-                Debug.LogError($"The Same Name Of: {assetPath}, Avatar Label: {label} From: {path}");
+                AssetDatabase.DeleteAsset(filePath);
+                /*if (filePaths.TryGetValue(filePath, out var path))
+                {
+                    Debug.LogError($"The Same Name Of: {assetPath}, Avatar Label: {label} From: {path}");
 
-                return false;
+                    return false;
+                }*/
+
+                filePaths[filePath] = assetPath;
             }
-
-            filePaths[filePath] = assetPath;
 
             var info = CreateInstance<Info>();
             info.rootBonePath = rootBonePath;
@@ -423,10 +428,16 @@ namespace ZG.Avatar
             info.gameObject = gameObject;
             info.bonePaths = bonePaths;
 
+            //info.hideFlags = HideFlags.HideInHierarchy;
+
             try
             {
-                AssetDatabase.CreateAsset(info, filePath);
-
+                var oldInfo = AssetDatabase.LoadAssetAtPath<Info>(filePath);
+                if(oldInfo == null)
+                    AssetDatabase.CreateAsset(info, filePath);
+                else
+                    AssetDatabase.AddObjectToAsset(info, oldInfo);
+                
                 var assetImporter = AssetImporter.GetAtPath(filePath);
                 if (assetImporter != null)
                 {

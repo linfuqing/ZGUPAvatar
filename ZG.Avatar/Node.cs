@@ -177,7 +177,11 @@ namespace ZG.Avatar
                     var partInfos = loader.values;
                     int numPartInfos = partInfos == null ? 0 : partInfos.Length;
                     if (numPartInfos < 1)
+                    {
+                        Debug.LogError(info.avatarName + " loaded fail.(Part Name: " + PartName + ')');
+
                         return false;
+                    }
 
                     GameObject gameObject;
                     var gameObjects = new GameObject[numPartInfos];
@@ -244,7 +248,7 @@ namespace ZG.Avatar
                         if (!string.IsNullOrEmpty(label))
                         {
                             bool isActive;
-                            int i, j, gameObjectOffset, numInfos;
+                            int i, j, numGameObjects, numInfos;
                             Database.Part part;
                             //AvatarDatabase.Condition[] conditions;
                             var instances = Instances.Values;
@@ -281,11 +285,17 @@ namespace ZG.Avatar
                                                         break;
                                                 }
 
-                                                gameObjectOffset = i < instance.gameObjectOffsets.Length - 1
+                                                numGameObjects = i < instance.gameObjectOffsets.Length - 1
                                                     ? instance.gameObjectOffsets[i + 1]
                                                     : instance.gameObjects.Count;
-                                                for (j = instance.gameObjectOffsets[i]; j <= gameObjectOffset; ++j)
-                                                    gameObjects[j].SetActive(isActive);
+                                                for (j = instance.gameObjectOffsets[i]; j < numGameObjects; ++j)
+                                                {
+                                                    gameObject = instance.gameObjects[j];
+                                                    if(gameObject == null)
+                                                        continue;
+
+                                                    gameObject.SetActive(isActive);
+                                                }
                                             }
                                         }
                                     }

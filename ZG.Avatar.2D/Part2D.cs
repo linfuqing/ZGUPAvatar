@@ -31,13 +31,18 @@ namespace ZG.Avatar
             }
         }
         
-        public override ISkinWrapper GetSkinWrapper(GameObject gameObject)
+        public override ISkinWrapper[] GetSkinWrappers(GameObject gameObject)
         {
-            var spriteSkin = gameObject.GetComponent<SpriteSkin>();
-            if (spriteSkin == null)
+            var spriteSkins = gameObject.GetComponentsInChildren<SpriteSkin>();
+            int numSpriteSkins = spriteSkins == null ? 0 : spriteSkins.Length;
+            if (numSpriteSkins < 1)
                 return null;
 
-            return new SkinWrapper(spriteSkin);
+            var skinWrappers = new ISkinWrapper[numSpriteSkins];
+            for (int i = 0; i < numSpriteSkins; ++i)
+                skinWrappers[i] = new SkinWrapper(spriteSkins[i]);
+
+            return skinWrappers;
         }
         
 #if UNITY_EDITOR
@@ -46,7 +51,12 @@ namespace ZG.Avatar
             Dictionary<string, UnityEngine.Object> assets, 
             Action<string> handler)
         {
-            gameObject.AddComponent<SkinWrapper2D>();
+            var spriteSkins = gameObject.GetComponentsInChildren<SpriteSkin>();
+            if (spriteSkins != null)
+            {
+                foreach (var spriteSkin in spriteSkins)
+                    spriteSkin.gameObject.AddComponent<SkinWrapper2D>();
+            }
         }
 #endif
     }

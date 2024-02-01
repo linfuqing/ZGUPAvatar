@@ -16,7 +16,8 @@ namespace ZG.Avatar
         public struct Instance
         {
             public string partName;
-            public GameObject[] gameObjects;
+            public int[] gameObjectOffsets;
+            public List<GameObject> gameObjects;
         }
 
         [Serializable]
@@ -173,14 +174,26 @@ namespace ZG.Avatar
                     if (loader.MoveNext())
                         return true;
 
-                    var partInfo = loader.value;
-                    if (partInfo == null)
+                    var partInfos = loader.values;
+                    int numPartInfos = partInfos == null ? 0 : partInfos.Length;
+                    if (numPartInfos < 1)
                         return false;
 
-                    var gameObject = Avatar.SetPart(partInfo);
-                    if (gameObject == null)
-                        Debug.LogError(info.avatarName + " loaded fail.(Part Name: " + PartName + ')');
-                    else
+                    GameObject gameObject;
+                    var gameObjects = new GameObject[numPartInfos];
+                    for (int i = 0; i < numPartInfos; ++i)
+                    {
+                        gameObject = Avatar.SetPart(partInfos[i]);
+                        if (gameObject == null)
+                        {
+                            Debug.LogError(info.avatarName + " loaded fail.(Part Name: " + PartName + ')');
+                            
+                            continue;
+                        }
+
+                        gameObjects[i] = gameObject;
+                    }
+
                     {
                         bool isActive = !info.isNegative;
                         if (info.conditions != null && info.conditions.Length > 0)
@@ -203,15 +216,24 @@ namespace ZG.Avatar
                             }
                         }
 
-                        gameObject.SetActive(isActive);
-
+                        for (int i = 0; i < numPartInfos; ++i)
+                        {
+                            gameObject = gameObjects[i];
+                            if(gameObject == null)
+                                continue;
+                            
+                            gameObject.SetActive(isActive);
+                        }
+                        
                         if(!Instances.TryGetValue(Part.group, out var instance))
                         {
                             instance.partName = PartName;
-                            instance.gameObjects = new GameObject[numInstances];
+                            instance.gameObjectOffsets = new int[numInstances];
+                            instance.gameObjects = new List<GameObject>();
                         }
 
-                        instance.gameObjects[__instanceIndex] = gameObject;
+                        instance.gameObjectOffsets[__instanceIndex] = instance.gameObjects.Count;
+                        instance.gameObjects.AddRange(gameObjects);
 
                         Instances[Part.group] = instance;
                     }
@@ -222,7 +244,7 @@ namespace ZG.Avatar
                         if (!string.IsNullOrEmpty(label))
                         {
                             bool isActive;
-                            int i, numInfos;
+                            int i, j, gameObjectOffset, numInfos;
                             Database.Part part;
                             //AvatarDatabase.Condition[] conditions;
                             var instances = Instances.Values;
@@ -236,33 +258,34 @@ namespace ZG.Avatar
                                         info = part.infos[i];
                                         if (info.conditions != null && info.conditions.Length > 0)
                                         {
-                                            if (instance.gameObjects != null && instance.gameObjects.Length > i)
+                                            if (instance.gameObjectOffsets != null &&
+                                                instance.gameObjectOffsets.Length > i)
                                             {
-                                                gameObject = instance.gameObjects[i];
-                                                if (gameObject != null)
+                                                isActive = info.isNegative;
+                                                foreach (var condition in info.conditions)
                                                 {
-                                                    isActive = info.isNegative;
-                                                    foreach (var condition in info.conditions)
+                                                    if (condition.label == label)
                                                     {
-                                                        if (condition.label == label)
-                                                        {
-                                                            if (!condition.isNegative)
-                                                                isActive = !info.isNegative;
-                                                        }
-                                                        else if (__Check(instances, Database, condition.label))
-                                                        {
-                                                            if (!condition.isNegative)
-                                                                isActive = !info.isNegative;
-                                                        }
-                                                        else if (condition.isNegative)
+                                                        if (!condition.isNegative)
                                                             isActive = !info.isNegative;
-
-                                                        if (isActive != info.isNegative)
-                                                            break;
                                                     }
+                                                    else if (__Check(instances, Database, condition.label))
+                                                    {
+                                                        if (!condition.isNegative)
+                                                            isActive = !info.isNegative;
+                                                    }
+                                                    else if (condition.isNegative)
+                                                        isActive = !info.isNegative;
 
-                                                    gameObject.SetActive(isActive);
+                                                    if (isActive != info.isNegative)
+                                                        break;
                                                 }
+
+                                                gameObjectOffset = i < instance.gameObjectOffsets.Length - 1
+                                                    ? instance.gameObjectOffsets[i + 1]
+                                                    : instance.gameObjects.Count;
+                                                for (j = instance.gameObjectOffsets[i]; j <= gameObjectOffset; ++j)
+                                                    gameObjects[j].SetActive(isActive);
                                             }
                                         }
                                     }
@@ -540,7 +563,7 @@ namespace ZG.Avatar
             return partName;
         }
 
-        public GameObject[] Get(string group)
+        public IReadOnlyList<GameObject> Get(string group)
         {
             if (__instances == null)
                 return null;
@@ -551,7 +574,7 @@ namespace ZG.Avatar
             return instance.gameObjects;
         }
 
-        public GameObject[] GetBy(string partName)
+        public IReadOnlyList<GameObject> GetBy(string partName)
         {
             if (partName == null || database == null || database.parts == null)
                 return null;

@@ -41,13 +41,18 @@ namespace ZG.Avatar
 
         public bool isBuild = true;
 
-        public virtual ISkinWrapper GetSkinWrapper(GameObject gameObject)
+        public virtual ISkinWrapper[] GetSkinWrappers(GameObject gameObject)
         {
-            var skinnedMeshRenderer = gameObject.GetComponent<SkinnedMeshRenderer>();
-            if (skinnedMeshRenderer == null)
+            var skinnedMeshRenderers = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+            int numSkinnedMeshRenderers = skinnedMeshRenderers == null ? 0 : skinnedMeshRenderers.Length;
+            if (numSkinnedMeshRenderers < 1)
                 return null;
 
-            return new SkinWrapper(skinnedMeshRenderer);
+            var skinWrappers = new ISkinWrapper[numSkinnedMeshRenderers];
+            for (int i = 0; i < numSkinnedMeshRenderers; ++i)
+                skinWrappers[i] = new SkinWrapper(skinnedMeshRenderers[i]);
+            
+            return skinWrappers;
         }
 
 #if UNITY_EDITOR

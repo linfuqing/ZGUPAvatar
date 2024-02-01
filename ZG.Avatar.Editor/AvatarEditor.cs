@@ -55,7 +55,7 @@ namespace ZG.Avatar
             return path == null ? transform.name : path + '/' + transform.name;
         }
 
-        public static Mesh Clone(Mesh source, Dictionary<string, Mesh> map, string folder, string label, Action<string> handler)
+        /*public static Mesh Clone(Mesh source, Dictionary<string, Mesh> map, string folder, string label, Action<string> handler)
         {
             if (source == null)
                 return null;
@@ -92,7 +92,7 @@ namespace ZG.Avatar
             }
 
             return destination;
-        }
+        }*/
 
         void OnGUI()
         {
@@ -141,17 +141,14 @@ namespace ZG.Avatar
                 int numGUIDs = guids == null ? 0 : guids.Length;
                 if (numGUIDs > 0)
                 {
-                    string assetPath, fileName, filePath, path;
+                    string assetPath, fileName, rootBonePath, infoPath, path;
                     int i, j, numParts;
                     float progress, total;
                     Part part;
-                    Info info;
-                    AssetImporter assetImporter;
                     GameObject prefab, gameObject, temp;
                     Transform transform, root;
-                    ISkinWrapper skinWrapper;
                     Action<string> handler;
-                    MeshFilter[] meshFilters;
+                    ISkinWrapper[] skinWrappers;
                     Part[] parts, targets;
                     Transform[] bones;
                     //HashSet<string> filePaths = null;
@@ -189,25 +186,16 @@ namespace ZG.Avatar
                                     __folder = AssetDatabase.CreateFolder(Path.GetDirectoryName(__folder), Path.GetFileName(__folder));
 
                                 fileName = __folder + '/' + part.avatarName;
-                                filePath = fileName + ".asset";
-
-                                /*if (assetMap == null)
-                                    assetMap = new Dictionary<string, HashSet<string>>();
-
-                                if (!assetMap.TryGetValue(part.avatarLabel, out assetNames) || assetNames == null)
-                                {
-                                    assetNames = new HashSet<string>();
-
-                                    assetMap[part.avatarLabel] = assetNames;
-                                }*/
-
-                                if (filePaths == null)
+                                
+                                /*if (filePaths == null)
                                     filePaths = new Dictionary<string, string>();
+
+                                filePath = fileName + ".asset";
 
                                 if (filePaths.TryGetValue(filePath, out path))
                                     Debug.LogError("The Same Name Of: " + assetPath + " Avatar Name: " + part.avatarName + ", Avatar Label: " + part.avatarLabel + " From: " + path);
                                 else
-                                    filePaths[filePath] = assetPath;
+                                    filePaths[filePath] = assetPath;*/
 
                                 if (!__isForceBuild && !part.isBuild)
                                 {
@@ -223,59 +211,23 @@ namespace ZG.Avatar
                                     EditorUtility.SetDirty(prefab);
                                 }
 
-                                info = CreateInstance<Info>();
+                                /*info = CreateInstance<Info>();
                                 if (info == null)
                                 {
                                     Debug.LogError("Fail To Build Avatar Name: " + part.avatarName + ", Avatar Label: " + part.avatarLabel + " From: " + assetPath);
 
                                     continue;
-                                }
+                                }*/
 
                                 transform = gameObject.transform;
                                 root = GetRoot(transform, part.level);
 
-                                if (bonePaths != null)
-                                    bonePaths.Clear();
+                                infoPath = GetPath(transform, root);
 
-                                skinWrapper = part.GetSkinWrapper(gameObject);
-                                if (skinWrapper != null)
-                                {
-                                    bones = skinWrapper.bones;
-                                    if (bones == null)
-                                    {
-                                        /*Debug.LogError("Fail To Build Avatar Name: " + part.avatarName + ", Avatar Label: " + part.avatarLabel + " From: " + assetPath);
-
-                                        DestroyImmediate(info);
-
-                                        continue;*/
-                                    }
-                                    else
-                                    {
-                                        info.rootBonePath = GetPath(skinWrapper.rootBone, root);
-
-                                        foreach (Transform bone in bones)
-                                        {
-                                            path = GetPath(bone, root);
-                                            if (path == null)
-                                            {
-                                                Debug.LogError("The bone: " + bone == null ? string.Empty : bone.name + " is missing");
-
-                                                bonePaths.Clear();
-
-                                                break;
-                                            }
-
-                                            if (bonePaths == null)
-                                                bonePaths = new List<string>();
-
-                                            bonePaths.Add(path);
-                                        }
-                                    }
-                                }
-                                else
-                                    info.rootBonePath = null;
-
+                                skinWrappers = part.GetSkinWrappers(gameObject);
+                                
                                 gameObject = Instantiate(gameObject, null, false);
+                                
                                 if (gameObject != null)
                                 {
                                     if (map == null)
@@ -286,25 +238,6 @@ namespace ZG.Avatar
                                     {
                                         filePaths[x] = tempPath;
                                     };
-
-                                    /*skinnedMeshRenderer = gameObject.GetComponent<SkinnedMeshRenderer>();
-                                    if (skinnedMeshRenderer != null)
-                                    {
-                                        skinnedMeshRenderer.rootBone = null;
-                                        skinnedMeshRenderer.bones = null;
-
-                                        skinnedMeshRenderer.sharedMesh = Clone(skinnedMeshRenderer.sharedMesh, meshMap, __folder, part.avatarLabel, handler);
-                                    }
-
-                                    meshFilters = gameObject.GetComponentsInChildren<MeshFilter>();
-                                    if (meshFilters != null)
-                                    {
-                                        foreach (MeshFilter meshFilter in meshFilters)
-                                        {
-                                            if (meshFilter != null)
-                                                meshFilter.mesh = Clone(meshFilter.sharedMesh, meshMap, __folder, part.avatarLabel, handler);
-                                        }
-                                    }*/
 
                                     targets = gameObject.GetComponents<Part>();
                                     if (targets != null)
@@ -343,33 +276,74 @@ namespace ZG.Avatar
                                     }
                                 }
 
-                                info.path = GetPath(transform, root);
-                                info.gameObject = gameObject;
-                                info.bonePaths = bonePaths == null || bonePaths.Count < 1 ? null : bonePaths.ToArray();
-
-                                try
+                                if (skinWrappers != null && skinWrappers.Length > 0)
                                 {
-                                    AssetDatabase.CreateAsset(info, filePath);
-
-                                    assetImporter = AssetImporter.GetAtPath(filePath);
-                                    if (assetImporter != null)
+                                    foreach (var skinWrapper in skinWrappers)
                                     {
-                                        assetImporter.SetAssetBundleNameAndVariant(part.avatarLabel, string.Empty);
-                                        assetImporter.SaveAndReimport();
+                                        rootBonePath = GetPath(skinWrapper.rootBone, root);
+
+                                        if (bonePaths != null)
+                                            bonePaths.Clear();
+
+                                        bones = skinWrapper.bones;
+                                        if (bones == null)
+                                        {
+                                            /*Debug.LogError("Fail To Build Avatar Name: " + part.avatarName + ", Avatar Label: " + part.avatarLabel + " From: " + assetPath);
+
+                                            DestroyImmediate(info);
+
+                                            continue;*/
+                                        }
+                                        else
+                                        {
+                                            foreach (Transform bone in bones)
+                                            {
+                                                path = GetPath(bone, root);
+                                                if (path == null)
+                                                {
+                                                    Debug.LogError("The bone: " + bone == null
+                                                        ? string.Empty
+                                                        : bone.name + " is missing");
+
+                                                    bonePaths.Clear();
+
+                                                    break;
+                                                }
+
+                                                if (bonePaths == null)
+                                                    bonePaths = new List<string>();
+
+                                                bonePaths.Add(path);
+                                            }
+                                        }
+
+                                        __BuildInfo(
+                                            gameObject,
+                                            part.avatarLabel,
+                                            assetPath,
+                                            fileName,
+                                            infoPath,
+                                            rootBonePath,
+                                            bonePaths == null || bonePaths.Count < 1 ? null : bonePaths.ToArray(),
+                                            ref filePaths);
                                     }
                                 }
-                                catch (Exception exception)
-                                {
-                                    if (exception != null)
-                                        Debug.LogError(exception.Message);
-                                }
+                                else
+                                    __BuildInfo(
+                                        gameObject,
+                                        part.avatarLabel,
+                                        assetPath,
+                                        fileName,
+                                        infoPath,
+                                        null,
+                                        null,
+                                        ref filePaths);
                             }
 
                             if (j < numParts)
                                 break;
                         }
                     }
-
 
                     if (filePaths != null)
                     {
@@ -381,6 +355,7 @@ namespace ZG.Avatar
                         {
                             bool isMeta;
                             int index, length = assetsPath == null ? 0 : assetsPath.Length;
+                            string filePath;
                             foreach (FileInfo fileInfo in fileInfos)
                             {
                                 filePath = fileInfo.FullName;
@@ -416,6 +391,57 @@ namespace ZG.Avatar
             __folder = EditorPrefs.GetString(FOLDER_KEY, "Assets/Temp");
             //Transform transform = AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(EditorPrefs.GetString(ROOT_GUID_KEY)), typeof(Transform)) as Transform;
             //__boneRoot = transform == null ? null : transform.Find(EditorPrefs.GetString(ROOT_PATH_KEY));
+        }
+
+        private bool __BuildInfo(
+            GameObject gameObject,
+            string label, 
+            string assetPath, 
+            string fileName, 
+            string infoPath, 
+            string rootBonePath,
+            string[] bonePaths, 
+            ref Dictionary<string, string> filePaths)
+        {
+            if (filePaths == null)
+                filePaths = new Dictionary<string, string>();
+
+            var filePath = $"{fileName}.asset";
+
+            if (filePaths.TryGetValue(filePath, out var path))
+            {
+                Debug.LogError($"The Same Name Of: {assetPath}, Avatar Label: {label} From: {path}");
+
+                return false;
+            }
+
+            filePaths[filePath] = assetPath;
+
+            var info = CreateInstance<Info>();
+            info.rootBonePath = rootBonePath;
+            info.path = infoPath;
+            info.gameObject = gameObject;
+            info.bonePaths = bonePaths;
+
+            try
+            {
+                AssetDatabase.CreateAsset(info, filePath);
+
+                var assetImporter = AssetImporter.GetAtPath(filePath);
+                if (assetImporter != null)
+                {
+                    assetImporter.SetAssetBundleNameAndVariant(label, string.Empty);
+                    assetImporter.SaveAndReimport();
+                }
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception.InnerException ?? exception);
+            }
+
+            return false;
         }
     }
 }

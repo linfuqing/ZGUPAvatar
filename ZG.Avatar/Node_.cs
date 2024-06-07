@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ZG.Avatar
 {
-    public partial class Node : MonoBehaviour
+    public partial class Node
     {
         private struct MaterialKey : IEquatable<MaterialKey>
         {
@@ -78,6 +78,7 @@ namespace ZG.Avatar
 
         private Coroutine __materialsCoroutine;
         private Queue<Database.MaterialOption> __materialOptions;
+        private HashSet<string> __partNames;
 
         private static Dictionary<MaterialKey, Material> __materials;
 
@@ -112,40 +113,6 @@ namespace ZG.Avatar
                 });
             }
         }
-
-        /*public int normalizedValue
-        {
-            get
-            {
-                if (database == null || database.nodes == null)
-                    return 0;
-
-                Database.Node node;
-                if (!database.nodes.TryGetValue(_dataName, out node))
-                    return 0;
-
-                return node.Normalize(__value);
-            }
-
-            set
-            {
-                if (database == null || database.nodes == null)
-                    return;
-
-                Database.Node node;
-                if (!database.nodes.TryGetValue(_dataName, out node))
-                    return;
-
-                value = node.Convert(value);
-
-                node.Get(value, option =>
-                {
-                    node.Select(option, __OnSelect, __OnSelect);
-                });
-
-                __value = value;
-            }
-        }*/
 
         public string dataName
         {
@@ -189,18 +156,6 @@ namespace ZG.Avatar
 
             __value = value;
         }
-
-        /*public void OnDestroy()
-        {
-            if (_materials != null)
-            {
-                foreach (MaterialInstance material in _materials)
-                {
-                    if (material.destination != null)
-                        Destroy(material.destination);
-                }
-            }
-        }*/
 
         public string Select(string partName, Action onComplete = null)
         {
@@ -261,70 +216,6 @@ namespace ZG.Avatar
 
             if(__materialsCoroutine == null && isActiveAndEnabled)
                 __materialsCoroutine = StartCoroutine(__LoadMaterials());
-
-            /*if (materialOption.index < 0)
-                return;
-
-            int numMaterials = _materials == null ? 0 : _materials.Length;
-            if (numMaterials <= materialOption.index)
-                return;
-
-            var materialInstance = _materials[materialOption.index];
-
-            Material material;
-            MaterialKey materialKey;
-            materialKey.color = Color.Lerp(materialOption.minColor, materialOption.maxColor, (float)((double)(__value ^ materialOption.seed) / int.MaxValue));
-            materialKey.colorParameterName = materialOption.colorParameterName;
-            materialKey.textureParameterName = materialOption.textureParameterName;
-            materialKey.texture = assetManager == null ? null : assetManager.Load<Texture>(materialOption.textureLabel, materialOption.textureName);
-            materialKey.material = materialInstance.source;
-
-            if (__materials == null)
-                __materials = new Dictionary<MaterialKey, Material>();
-
-            if (!__materials.TryGetValue(materialKey, out material) || material == null)
-            {
-                material = Instantiate(materialInstance.source);
-                if (material != null)
-                {
-                    if (string.IsNullOrWhiteSpace(materialOption.colorParameterName))
-                        material.color = materialKey.color;
-                    else
-                        material.SetColor(materialOption.colorParameterName, materialKey.color);
-
-                    if (string.IsNullOrWhiteSpace(materialOption.textureParameterName))
-                        material.mainTexture = materialKey.texture;
-                    else
-                        material.SetTexture(materialOption.textureParameterName, materialKey.texture);
-                }
-
-                __materials[materialKey] = material;
-            }
-
-            if (materialInstance.destination != material)
-            {
-                if (materialInstance.destination == null)
-                    materialInstance.destination = materialInstance.source;
-
-                if (gameObject.Replace(materialInstance.destination, material) < 1)
-                    return;
-
-                MaterialInstance temp;
-                for (int i = 0; i < numMaterials; ++i)
-                {
-                    temp = _materials[i];
-                    if (temp.source != materialInstance.source)
-                        continue;
-
-                    temp.destination = material;
-
-                    _materials[i] = temp;
-                }
-
-                materialInstance.destination = material;
-
-                _materials[materialOption.index] = materialInstance;
-            }*/
         }
 
         private void __OnSelect(Database.PartOption partOption)
@@ -359,52 +250,48 @@ namespace ZG.Avatar
 
                         materialInstance = _materials[materialOption.index];
 
-                        materialKey.material = materialInstance.source;
-
-                        if (__materials == null)
-                            __materials = new Dictionary<MaterialKey, Material>();
-
-                        if (!__materials.TryGetValue(materialKey, out material) || material == null)
+                        if (materialInstance.destination == null)
                         {
-                            material = Instantiate(materialInstance.source);
-                            if (material != null)
+                            materialKey.material = materialInstance.source;
+
+                            if (__materials == null)
+                                __materials = new Dictionary<MaterialKey, Material>();
+
+                            if (!__materials.TryGetValue(materialKey, out material) || material == null)
                             {
-                                if (string.IsNullOrWhiteSpace(materialOption.colorParameterName))
-                                    material.color = materialKey.color;
-                                else
-                                    material.SetColor(materialOption.colorParameterName, materialKey.color);
-
-                                if (string.IsNullOrWhiteSpace(materialOption.textureParameterName))
-                                    material.mainTexture = materialKey.texture;
-                                else
-                                    material.SetTexture(materialOption.textureParameterName, materialKey.texture);
-                            }
-
-                            __materials[materialKey] = material;
-                        }
-
-                        if (materialInstance.destination != material)
-                        {
-                            if (materialInstance.destination == null)
-                                materialInstance.destination = materialInstance.source;
-
-                            if (gameObject.Replace(materialInstance.destination, material) > 0)
-                            {
-                                for (i = 0; i < numMaterials; ++i)
+                                material = Instantiate(materialInstance.source);
+                                if (material != null)
                                 {
-                                    temp = _materials[i];
-                                    if (temp.source != materialInstance.source)
-                                        continue;
+                                    if (string.IsNullOrWhiteSpace(materialOption.colorParameterName))
+                                        material.color = materialKey.color;
+                                    else
+                                        material.SetColor(materialOption.colorParameterName, materialKey.color);
 
-                                    temp.destination = material;
-
-                                    _materials[i] = temp;
+                                    if (string.IsNullOrWhiteSpace(materialOption.textureParameterName))
+                                        material.mainTexture = materialKey.texture;
+                                    else
+                                        material.SetTexture(materialOption.textureParameterName, materialKey.texture);
                                 }
 
-                                materialInstance.destination = material;
-
-                                _materials[materialOption.index] = materialInstance;
+                                __materials[materialKey] = material;
                             }
+
+                            gameObject.Replace(materialInstance.source, material);
+
+                            for (i = 0; i < numMaterials; ++i)
+                            {
+                                temp = _materials[i];
+                                if (temp.source != materialInstance.source)
+                                    continue;
+
+                                temp.destination = material;
+
+                                _materials[i] = temp;
+                            }
+
+                            materialInstance.destination = material;
+
+                            _materials[materialOption.index] = materialInstance;
                         }
                     }
                 }

@@ -324,7 +324,7 @@ namespace ZG.Avatar
                     if (!string.IsNullOrEmpty(part.label))
                     {
                         bool isActive;
-                        int numInfos, i;
+                        int i, j, numInfos, numGameObjects;
                         Database.Info info;
                         GameObject gameObject;
                         var values = instances.Values;
@@ -338,8 +338,8 @@ namespace ZG.Avatar
                                     info = part.infos[i];
                                     if (info.conditions != null && info.conditions.Length > 0)
                                     {
-                                        gameObject = value.gameObjects[i];
-                                        if (gameObject != null)
+                                        if (instance.gameObjectOffsets != null &&
+                                            instance.gameObjectOffsets.Length > i)
                                         {
                                             isActive = info.isNegative;
                                             foreach (var condition in info.conditions)
@@ -360,10 +360,18 @@ namespace ZG.Avatar
                                                 if (isActive != info.isNegative)
                                                     break;
                                             }
+                                            
+                                            numGameObjects = i < instance.gameObjectOffsets.Length - 1
+                                                ? instance.gameObjectOffsets[i + 1]
+                                                : instance.gameObjects.Count;
+                                            for (j = instance.gameObjectOffsets[i]; j < numGameObjects; ++j)
+                                            {
+                                                gameObject = instance.gameObjects[j];
+                                                if(gameObject == null)
+                                                    continue;
 
-                                            gameObject = value.gameObjects[i];
-                                            if (gameObject != null)
                                                 gameObject.SetActive(isActive);
+                                            }
                                         }
                                     }
                                 }

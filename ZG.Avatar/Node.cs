@@ -338,8 +338,8 @@ namespace ZG.Avatar
                                     info = part.infos[i];
                                     if (info.conditions != null && info.conditions.Length > 0)
                                     {
-                                        if (instance.gameObjectOffsets != null &&
-                                            instance.gameObjectOffsets.Length > i)
+                                        if (value.gameObjectOffsets != null &&
+                                            value.gameObjectOffsets.Length > i)
                                         {
                                             isActive = info.isNegative;
                                             foreach (var condition in info.conditions)
@@ -361,12 +361,12 @@ namespace ZG.Avatar
                                                     break;
                                             }
                                             
-                                            numGameObjects = i < instance.gameObjectOffsets.Length - 1
-                                                ? instance.gameObjectOffsets[i + 1]
-                                                : instance.gameObjects.Count;
-                                            for (j = instance.gameObjectOffsets[i]; j < numGameObjects; ++j)
+                                            numGameObjects = i < value.gameObjectOffsets.Length - 1
+                                                ? value.gameObjectOffsets[i + 1]
+                                                : value.gameObjects.Count;
+                                            for (j = value.gameObjectOffsets[i]; j < numGameObjects; ++j)
                                             {
-                                                gameObject = instance.gameObjects[j];
+                                                gameObject = value.gameObjects[j];
                                                 if(gameObject == null)
                                                     continue;
 

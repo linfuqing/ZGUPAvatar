@@ -233,6 +233,9 @@ namespace ZG.Avatar
                                     if (map == null)
                                         map = new Dictionary<string, UnityEngine.Object>();
 
+                                    if (filePaths == null)
+                                        filePaths = new Dictionary<string, string>();
+
                                     string tempPath = assetPath;
                                     handler = x =>
                                     {
@@ -252,9 +255,6 @@ namespace ZG.Avatar
 
                                     path = fileName + ".prefab";
 
-                                    if (filePaths == null)
-                                        filePaths = new Dictionary<string, string>();
-                                    
                                     filePaths[path] = assetPath;
 
                                     temp = PrefabUtility.SaveAsPrefabAsset(gameObject, path, out bool isSuccess);

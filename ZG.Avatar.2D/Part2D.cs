@@ -1,3 +1,4 @@
+#if USING_AVATAR_D2
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -61,3 +62,4 @@ namespace ZG.Avatar
 #endif
     }
 }
+#endif

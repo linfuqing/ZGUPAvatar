@@ -1,3 +1,4 @@
+#if USING_AVATAR_D2
 using UnityEngine;
 using UnityEngine.U2D.Animation;
 
@@ -33,3 +34,4 @@ namespace ZG.Avatar
         }
     }
 }
+#endif

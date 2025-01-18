@@ -2,7 +2,8 @@
     "name": "ZG.Avatar",
     "rootNamespace": "",
     "references": [
-        "GUID:beff58cf91ef5dc4f8939ec84aca2109"
+        "GUID:beff58cf91ef5dc4f8939ec84aca2109",
+        "GUID:38d5088b410fc4249bce1feefb7adf85"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
